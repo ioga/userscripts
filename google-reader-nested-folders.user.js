@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Google Reader: Nested Folders
 // @namespace      ioga
-// @version        0.1
+// @version        0.2
 // @author         sethaurus
 // @author         ioga
 // @description    Displays folders (tags) in a nested hierarchy, when (for example) one folder is named category, and another is named category:subcategory. Note that the names must be separated by a colon, and that the outer folder must exist, even if it does not directly contain any feeds. Folders an be nested to an arbitrary depth.
@@ -19,6 +19,7 @@
   setTimeout(arguments.callee, 100);
   if (domIsDirty()) nestFolders();
 })();
+
 function parseNode(html) {
   if (! parseNode.element) {
     parseNode.element = document.createElement('div');
@@ -31,8 +32,18 @@ function getUnreadCount(folderNode) {
   return parseInt(folderNode.querySelector('.unread-count').innerHTML.replace(/\(|\)/g, '')) || 0;
 };
 
+function setUnreadClass(folderNode) {
+  folderNode.querySelector('a .name-text').classList.add('name-unread');
+};
+
 function setUnreadCount(folderNode, count) {
-    folderNode.querySelector('.unread-count').innerHTML = ["(", ")"].join(count);
+  var $el = folderNode.querySelector('.unread-count');
+  if (count > 0) {
+    $el.innerHTML = ["(", ")"].join(count);
+    setUnreadClass(folderNode);
+  } else {
+    $el.innerHTML = '';
+  }
 };
 
 function nestFolders() {
@@ -63,10 +74,11 @@ function nestFolders() {
 
       parent.insertBefore(wrapper, parent.firstChild);
 
-            setUnreadCount(parentFolder, getUnreadCount(parentFolder) + getUnreadCount(folder));
+      setUnreadCount(parentFolder, getUnreadCount(parentFolder) + getUnreadCount(folder));
     }
   }
 };
+
 function domIsDirty() {
   var isDirty = ! document.querySelector('#clean-flag');
 
